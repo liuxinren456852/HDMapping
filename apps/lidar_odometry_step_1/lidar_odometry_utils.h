@@ -1,92 +1,288 @@
-#ifndef _LIDAR_ODOMETRY_UTILS_H_
-#define _LIDAR_ODOMETRY_UTILS_H_
+#pragma once
 
-#include <portable-file-dialogs.h>
-
-#include <laszip/laszip_api.h>
-#include <iostream>
-#include <Eigen/Dense>
-#include <vector>
-#include <Fusion.h>
-#include <map>
-#include <execution>
-
-#include <imgui.h>
-#include <imgui_impl_glut.h>
-#include <imgui_impl_opengl2.h>
-#include <ImGuizmo.h>
-#include <imgui_internal.h>
-
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-
-#include <structures.h>
-#include <ndt.h>
-
-#include <transformations.h>
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian.h>
-#include <python-scripts/constraints/relative_pose_tait_bryan_wc_jacobian.h>
 #include <chrono>
-#include <python-scripts/constraints/smoothness_tait_bryan_wc_jacobian.h>
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian_simplified.h>
-#include <python-scripts/constraints/constraint_fixed_parameter_jacobian.h>
+#include <cmath>
+#include <filesystem>
+#include <iostream>
+#include <map>
+#include <pch/pch.h>
+#include <vector>
+
+#include <ankerl/unordered_dense.h>
+
+#include <Eigen/Dense>
+#include <HDMapping/PoseInterpolation.h>
 #include <common/include/cauchy.h>
+#include <laszip/laszip_api.h>
+#include <nlohmann/json.hpp>
+#include <vqf.hpp>
+
+#include <HDMapping/Version.hpp>
+
+#include <Core/ndt.h>
+#include <Core/structures.h>
+#include <Core/transformations.h>
+
+#include <python-scripts/constraints/constraint_fixed_parameter_jacobian.h>
+#include <python-scripts/constraints/relative_pose_tait_bryan_wc_jacobian.h>
+#include <python-scripts/constraints/smoothness_tait_bryan_wc_jacobian.h>
 #include <python-scripts/point-to-feature-metrics/point_to_line_tait_bryan_wc_jacobian.h>
-#include <pfd_wrapper.hpp>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian_simplified.h>
 
-struct WorkerData
+#if WITH_GUI == 1
+#include <imgui.h>
+#endif
+
+namespace fs = std::filesystem;
+
+using NDTBucketMapType = ankerl::unordered_dense::map<uint64_t, NDT::Bucket>;
+using NDTBucketMapType2 = ankerl::unordered_dense::map<uint64_t, NDT::Bucket2>;
+
+// Helper function for getting software version from CMake macros
+inline std::string get_software_version()
 {
-    std::vector<Point3Di> intermediate_points;
-    std::vector<Point3Di> original_points;
-    std::vector<Eigen::Affine3d> intermediate_trajectory;
-    std::vector<Eigen::Affine3d> intermediate_trajectory_motion_model;
-    std::vector<std::pair<double, double>> intermediate_trajectory_timestamps;
-    std::vector<Eigen::Vector3d> imu_om_fi_ka;
-    bool show = false;
-};
-
-using NDTBucketMapType = std::unordered_map<uint64_t, NDT::Bucket>;
-using NDTBucketMapType2 = std::unordered_map<uint64_t, NDT::Bucket2>;
+    return HDMAPPING_VERSION_STRING;
+}
 
 struct LidarOdometryParams
 {
-    double filter_threshold_xy = 0.3;
+    // version information - automatically generated from CMake build system
+    std::string software_version = get_software_version();
+    std::string config_version = "1.0";
+    std::string build_date = __DATE__;
+
+    // performance
+    bool useMultithread = true;
+    double real_time_threshold_seconds = 10.0; // for realtime use: threshold_nr_poses * 0.005, where 0.005 is related with IMU frequency
+
+    // filter points
+    double filter_threshold_xy_inner = 0.3; // filtering points during load
+    double filter_threshold_xy_outer = 70.0; // filtering points during load
+    double decimation = 0.01; // filtering points during load
+    double threshould_output_filter = 0.5; // for export --> all points xyz.norm() < threshould_output_filter will be removed
+    int min_counter_concatenated_trajectory_nodes = 10; // for export
+
+    // AHRS type selection: false = Fusion (Madgwick, default), true = VQF
+    bool use_vqf = false;
+
+    // Fusion (Madgwick) AHRS parameters
+    bool fusionConventionNwu = true;
+    bool fusionConventionEnu = false;
+    bool fusionConventionNed = false;
+    double fusion_gain = 0.5; // complementary filter gain (0-1, higher = more accelerometer trust)
+
+    // VQF core
+    double vqf_tauAcc = 0.5; // accelerometer time constant [s] (higher = more gyro trust)
+
+    // VQF gyroscope bias estimation
+    bool vqf_motionBiasEstEnabled = true; // estimate gyro bias during motion
+    bool vqf_restBiasEstEnabled = true; // estimate gyro bias during rest
+    double vqf_biasSigmaInit = 0.5; // initial bias uncertainty [°/s]
+    double vqf_biasForgettingTime = 100.0; // time for uncertainty to grow 0→0.1 °/s [s]
+    double vqf_biasClip = 2.0; // max expected gyro bias [°/s]
+    double vqf_biasSigmaMotion = 0.1; // converged bias uncertainty during motion [°/s]
+    double vqf_biasVerticalForgettingFactor = 0.0001; // forgetting for unobservable vertical bias
+    double vqf_biasSigmaRest = 0.03; // converged bias uncertainty during rest [°/s]
+
+    // VQF rest detection
+    double vqf_restMinT = 1.5; // time threshold for rest detection [s]
+    double vqf_restFilterTau = 0.5; // LP filter time constant for rest detection [s]
+    double vqf_restThGyr = 2.0; // gyro threshold for rest detection [°/s]
+    double vqf_restThAcc = 0.5; // acc threshold for rest detection [m/s²]
+
+    // VQF magnetometer (only used when vqf_useMagnetometer is true)
+    bool vqf_useMagnetometer = false; // use 9D mode (with magnetometer) instead of 6D
+    double vqf_tauMag = 9.0; // magnetometer time constant [s]
+    bool vqf_magDistRejectionEnabled = true; // magnetic disturbance detection & rejection
+    double vqf_magCurrentTau = 0.05; // LP filter for current mag norm/dip [s]
+    double vqf_magRefTau = 20.0; // adjustment time for mag reference [s]
+    double vqf_magNormTh = 0.1; // relative threshold for mag field strength
+    double vqf_magDipTh = 10.0; // threshold for mag dip angle [°]
+    double vqf_magNewTime = 20.0; // time to accept new mag field [s]
+    double vqf_magNewFirstTime = 5.0; // time to accept first mag field [s]
+    double vqf_magNewMinGyr = 20.0; // min angular velocity for mag acceptance [°/s]
+    double vqf_magMinUndisturbedTime = 0.5; // min undisturbed time [s]
+    double vqf_magMaxRejectionTime = 60.0; // max full mag rejection duration [s]
+    double vqf_magRejectionFactor = 2.0; // slowdown factor for heading correction
+
+    // lidar odometry control
+    bool use_motion_from_previous_step = true;
+    int nr_iter = 100;
+    NDT::GridParameters in_out_params_indoor;
+    NDT::GridParameters in_out_params_outdoor;
+    double sliding_window_trajectory_length_threshold = 5.0;
+    double max_distance_lidar = 70.0; // I am not processing data above dist distance in lidar odometry
+    int threshold_initial_points = 10000;
+    int threshold_nr_poses = 20;
+    double convergence_delta_threshold = 1e-12; // convergence threshold for optimization
+    double convergence_delta_threshold_outer_rgd = 1e-6;
+
+    // lidar odometry debug info
+    bool save_calibration_validation = false;
+    int calibration_validation_points = 1000000;
+
+    // consistency
+    int num_constistency_iter = 10;
+    bool use_mutliple_gaussian = false;
+
+    // motion_model uncertainty
+    double lidar_odometry_motion_model_x_1_sigma_m = 0.0005;
+    double lidar_odometry_motion_model_y_1_sigma_m = 0.0005;
+    double lidar_odometry_motion_model_z_1_sigma_m = 0.0005;
+
+    double lidar_odometry_motion_model_om_1_sigma_deg = 0.01;
+    double lidar_odometry_motion_model_fi_1_sigma_deg = 0.01;
+    double lidar_odometry_motion_model_ka_1_sigma_deg = 0.01;
+
+    // motion_model first trajectory node prior uncertainty
+    double lidar_odometry_motion_model_fix_origin_x_1_sigma_m = 0.000001;
+    double lidar_odometry_motion_model_fix_origin_y_1_sigma_m = 0.000001;
+    double lidar_odometry_motion_model_fix_origin_z_1_sigma_m = 0.000001;
+    double lidar_odometry_motion_model_fix_origin_om_1_sigma_deg = 0.000001;
+    double lidar_odometry_motion_model_fix_origin_fi_1_sigma_deg = 0.000001;
+    double lidar_odometry_motion_model_fix_origin_ka_1_sigma_deg = 0.000001;
+
+    // motion model correction (experimental --> not recommended yet)
+    TaitBryanPose motion_model_correction;
+
+    // robust lidar odometry control (experimental --> not recommended yet)
+    bool use_robust_and_accurate_lidar_odometry = false;
+    double distance_bucket = 0.2;
+    double polar_angle_deg = 10.0;
+    double azimutal_angle_deg = 10.0;
+    int robust_and_accurate_lidar_odometry_iterations = 20;
+    double distance_bucket_rigid_sf = 0.5;
+    double polar_angle_deg_rigid_sf = 10.0;
+    double azimutal_angle_deg_rigid_sf = 10.0;
+    int robust_and_accurate_lidar_odometry_rigid_sf_iterations = 30;
+    double max_distance_lidar_rigid_sf = 70.0;
+    double rgd_sf_sigma_x_m = 0.001;
+    double rgd_sf_sigma_y_m = 0.001;
+    double rgd_sf_sigma_z_m = 0.001;
+    double rgd_sf_sigma_om_deg = 0.01;
+    double rgd_sf_sigma_fi_deg = 0.01;
+    double rgd_sf_sigma_ka_deg = 0.01;
+
+    // paths
+    std::string current_output_dir = "";
+    std::string working_directory_preview = "";
+    std::string working_directory_cache = "";
+
+    // other
     Eigen::Affine3d m_g = Eigen::Affine3d::Identity();
     std::vector<Point3Di> initial_points;
-    NDT::GridParameters in_out_params;
-    NDTBucketMapType buckets;
-    bool use_motion_from_previous_step = true;
     double consecutive_distance = 0.0;
-    int nr_iter = 100;
-    bool useMultithread = true;
     std::vector<Point3Di> reference_points;
-    double decimation = 0.1;
-    NDTBucketMapType reference_buckets;
-    std::string working_directory_preview = "";
-    double sliding_window_trajectory_length_threshold = 50.0;
+    // NDTBucketMapType reference_buckets;
+    double total_length_of_calculated_trajectory = 0.0;
+
+    std::mutex mutex_buckets_indoor;
+    NDTBucketMapType buckets_indoor;
+
+    std::mutex mutex_buckets_outdoor;
+    NDTBucketMapType buckets_outdoor;
+
+#if WITH_GUI == 1
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+#endif
+
+    bool use_removie_imu_bias_from_first_stationary_scan = false;
+    Eigen::Vector3d estimated_gyro_bias_dps = Eigen::Vector3d::Zero(); // runtime: gyro bias in deg/s from stationary samples
+
+    // IMU preintegration
+    bool use_imu_preintegration = false;
+    int imu_preintegration_method = 6; // 0=euler_body, 1=trapezoidal_body, 2=euler_gravity, 3=trapezoidal_gravity, 4=kalman, 5=euler_ahrs,
+                                       // 6=trapezoidal_ahrs, 7=kalman_ahrs
+
+    // ablation study
+    bool ablation_study_use_planarity = false;
+    bool ablation_study_use_norm = false;
+    bool ablation_study_use_hierarchical_rgd = true;
+    bool ablation_study_use_view_point_and_normal_vectors = true;
+    bool ablation_study_use_threshold_outer_rgd = false;
+    bool save_index_pose = false;
+    bool ablation_study_use_anisotropic_weighting = true;
 };
 
-unsigned long long int get_index(const int16_t x, const int16_t y, const int16_t z);
-unsigned long long int get_rgd_index(const Eigen::Vector3d p, const Eigen::Vector3d b);
-
-// this function finds interpolated pose between two poses according to query_time
-Eigen::Matrix4d getInterpolatedPose(const std::map<double, Eigen::Matrix4d> &trajectory, double query_time);
+inline VQFParams buildVQFParams(const LidarOdometryParams& p)
+{
+    VQFParams vp;
+    vp.tauAcc = p.vqf_tauAcc > 0.0 ? p.vqf_tauAcc : 3.0;
+    vp.tauMag = p.vqf_tauMag;
+#ifndef VQF_NO_MOTION_BIAS_ESTIMATION
+    vp.motionBiasEstEnabled = p.vqf_motionBiasEstEnabled;
+#endif
+    vp.restBiasEstEnabled = p.vqf_restBiasEstEnabled;
+    vp.magDistRejectionEnabled = p.vqf_magDistRejectionEnabled;
+    vp.biasSigmaInit = p.vqf_biasSigmaInit;
+    vp.biasForgettingTime = p.vqf_biasForgettingTime;
+    vp.biasClip = p.vqf_biasClip;
+#ifndef VQF_NO_MOTION_BIAS_ESTIMATION
+    vp.biasSigmaMotion = p.vqf_biasSigmaMotion;
+    vp.biasVerticalForgettingFactor = p.vqf_biasVerticalForgettingFactor;
+#endif
+    vp.biasSigmaRest = p.vqf_biasSigmaRest;
+    vp.restMinT = p.vqf_restMinT;
+    vp.restFilterTau = p.vqf_restFilterTau;
+    vp.restThGyr = p.vqf_restThGyr;
+    vp.restThAcc = p.vqf_restThAcc;
+    vp.magCurrentTau = p.vqf_magCurrentTau;
+    vp.magRefTau = p.vqf_magRefTau;
+    vp.magNormTh = p.vqf_magNormTh;
+    vp.magDipTh = p.vqf_magDipTh;
+    vp.magNewTime = p.vqf_magNewTime;
+    vp.magNewFirstTime = p.vqf_magNewFirstTime;
+    vp.magNewMinGyr = p.vqf_magNewMinGyr;
+    vp.magMinUndisturbedTime = p.vqf_magMinUndisturbedTime;
+    vp.magMaxRejectionTime = p.vqf_magMaxRejectionTime;
+    vp.magRejectionFactor = p.vqf_magRejectionFactor;
+    return vp;
+}
 
 // this function reduces number of points by preserving only first point for each bucket {bucket_x, bucket_y, bucket_z}
-std::vector<Point3Di> decimate(const std::vector<Point3Di> &points, double bucket_x, double bucket_y, double bucket_z);
+std::vector<Point3Di> decimate(const std::vector<Point3Di>& points, double bucket_x, double bucket_y, double bucket_z);
 
 // this function updates each bucket (mean value, covariance) in regular grid decomposition
-void update_rgd(NDT::GridParameters &rgd_params, NDTBucketMapType &buckets,
-                std::vector<Point3Di> &points_global, Eigen::Vector3d viewport = Eigen::Vector3d(0, 0, 0));
+void update_rgd(
+    const NDT::GridParameters& rgd_params,
+    NDTBucketMapType& buckets,
+    const std::vector<Point3Di>& points_global,
+    const Eigen::Vector3d& viewport = Eigen::Vector3d(0, 0, 0),
+    size_t* lookup_count = nullptr);
+
+// Statistics for bucket lookups (used for performance analysis)
+struct LookupStats
+{
+    size_t indoor_lookups = 0;
+    size_t outdoor_lookups = 0;
+};
+
+// hierarchical version: updates both indoor and outdoor, then links buckets
+void update_rgd_hierarchy(
+    const NDT::GridParameters& rgd_params_indoor,
+    NDTBucketMapType& buckets_indoor,
+    const std::vector<Point3Di>& points_global,
+    const Eigen::Vector3d& viewport,
+    const NDT::GridParameters& rgd_params_outdoor,
+    NDTBucketMapType& buckets_outdoor,
+    LookupStats& stats);
+
+void update_rgd_spherical_coordinates(
+    const NDT::GridParameters& rgd_params,
+    NDTBucketMapType& buckets,
+    const std::vector<Point3Di>& points_global,
+    const std::vector<Eigen::Vector3d>& points_global_spherical);
 
 //! This function load inertial measurement unit data.
 //! This function expects a file with the following format:
-//! timestamp angular_velocity_x angular_velocity_y angular_velocity_z linear_acceleration_x linear_acceleration_y linear_acceleration_z imu_id
+//! timestamp angular_velocity_x angular_velocity_y angular_velocity_z linear_acceleration_x linear_acceleration_y linear_acceleration_z
+//! imu_id
 //! @note imu_id is an optional column, if not present, it is assumed that all data comes from the same IMU.
 //! @param imu_file - path to file with IMU data
 //! @param imuToUse - id number of IMU to use, the same index as in pointcloud return by @ref load_point_cloud
 //! @return vector of tuples (std::pair<timestamp, timestampUnix>, angular_velocity, linear_acceleration)
-std::vector<std::tuple<std::pair<double, double>, FusionVector, FusionVector>> load_imu(const std::string &imu_file, int imuToUse);
+std::vector<std::tuple<std::pair<double, double>, Eigen::Vector3f, Eigen::Vector3f>> load_imu(const std::string& imu_file, int imuToUse);
 
 //! This function load point cloud from LAS/LAZ file.
 //! Optionally it can apply extrinsic calibration to each point.
@@ -97,39 +293,173 @@ std::vector<std::tuple<std::pair<double, double>, FusionVector, FusionVector>> l
 //! @param filter_threshold_xy - threshold for filtering points in xy plane
 //! @param calibrations - map of calibrations for each scanner key is scanner id.
 //! @return vector of points of @ref Point3Di type
-std::vector<Point3Di> load_point_cloud(const std::string &lazFile, bool ommit_points_with_timestamp_equals_zero, double filter_threshold_xy,
-                                       const std::unordered_map<int, Eigen::Affine3d> &calibrations);
+std::vector<Point3Di> load_point_cloud(
+    const std::string& lazFile,
+    bool ommit_points_with_timestamp_equals_zero,
+    double filter_threshold_xy_inner,
+    double filter_threshold_xy_outer,
+    const std::unordered_map<int, Eigen::Affine3d>& calibrations);
 
-bool saveLaz(const std::string &filename, const WorkerData &data, double threshould_output_filter);
-bool saveLaz(const std::string &filename, const std::vector<Point3Di> &points_global);
-bool save_poses(const std::string file_name, std::vector<Eigen::Affine3d> m_poses, std::vector<std::string> filenames);
+bool save_poses(const std::string& file_name, const std::vector<Eigen::Affine3d>& m_poses, const std::vector<std::string>& filenames);
 
-// this function draws ellipse for each bucket
-void draw_ellipse(const Eigen::Matrix3d &covar, const Eigen::Vector3d &mean, Eigen::Vector3f color, float nstd = 3);
+fs::path get_next_result_path(const std::string& working_directory);
 
 // this function performs main LiDAR odometry calculations
-void optimize(std::vector<Point3Di> &intermediate_points, std::vector<Eigen::Affine3d> &intermediate_trajectory,
-              std::vector<Eigen::Affine3d> &intermediate_trajectory_motion_model,
-              NDT::GridParameters &rgd_params, NDTBucketMapType &buckets, bool useMultithread /*,
-               bool add_pitch_roll_constraint, const std::vector<std::pair<double, double>> &imu_roll_pitch*/
-);
+void optimize_lidar_odometry(
+    std::vector<Point3Di>& intermediate_points,
+    std::vector<Eigen::Affine3d>& intermediate_trajectory,
+    std::vector<Eigen::Affine3d>& intermediate_trajectory_motion_model,
+    NDT::GridParameters& rgd_params_indoor,
+    NDTBucketMapType& buckets_indoor,
+    NDT::GridParameters& rgd_params_outdoor,
+    NDTBucketMapType& buckets_outdoor,
+    bool useMultithread,
+    double max_distance,
+    double& delta,
+    double lm_factor,
+    TaitBryanPose motion_model_correction,
+    double lidar_odometry_motion_model_x_1_sigma_m,
+    double lidar_odometry_motion_model_y_1_sigma_m,
+    double lidar_odometry_motion_model_z_1_sigma_m,
+    double lidar_odometry_motion_model_om_1_sigma_deg,
+    double lidar_odometry_motion_model_fi_1_sigma_deg,
+    double lidar_odometry_motion_model_ka_1_sigma_deg,
+    double lidar_odometry_motion_model_fix_origin_x_1_sigma_m,
+    double lidar_odometry_motion_model_fix_origin_y_1_sigma_m,
+    double lidar_odometry_motion_model_fix_origin_z_1_sigma_m,
+    double lidar_odometry_motion_model_fix_origin_om_1_sigma_deg,
+    double lidar_odometry_motion_model_fix_origin_fi_1_sigma_deg,
+    double lidar_odometry_motion_model_fix_origin_ka_1_sigma_deg,
+    bool ablation_study_use_planarity,
+    bool ablation_study_use_norm,
+    bool ablation_study_use_hierarchical_rgd,
+    bool ablation_study_use_view_point_and_normal_vectors,
+    LookupStats& lookup_stats,
+    const bool& ablation_study_use_threshold_outer_rgd,
+    const double& convergence_result,
+    const double& convergence_delta_threshold_outer_rgd);
 
-void optimize_icp(std::vector<Point3Di> &intermediate_points, std::vector<Eigen::Affine3d> &intermediate_trajectory,
-                  std::vector<Eigen::Affine3d> &intermediate_trajectory_motion_model,
-                  NDT::GridParameters &rgd_params, /*NDTBucketMapType &buckets*/ std::vector<Point3Di> points_global, bool useMultithread /*,
-                   bool add_pitch_roll_constraint, const std::vector<std::pair<double, double>> &imu_roll_pitch*/
-);
+void optimize_sf2(
+    std::vector<Point3Di>& intermediate_points,
+    std::vector<Point3Di>& intermediate_points_sf,
+    std::vector<Eigen::Affine3d>& intermediate_trajectory,
+    const std::vector<Eigen::Affine3d>& intermediate_trajectory_motion_model,
+    NDT::GridParameters& rgd_params,
+    bool useMultithread,
+    double wx,
+    double wy,
+    double wz,
+    double wom,
+    double wfi,
+    double wka);
 
 // this function registers initial point cloud to geoferenced point cloud
-void align_to_reference(NDT::GridParameters &rgd_params, std::vector<Point3Di> &initial_points, Eigen::Affine3d &m_g, NDTBucketMapType &buckets);
+void align_to_reference(
+    NDT::GridParameters& rgd_params, std::vector<Point3Di>& initial_points, Eigen::Affine3d& m_g, NDTBucketMapType& buckets);
 
 // this function apply correction to pitch and roll
 // void fix_ptch_roll(std::vector<WorkerData> &worker_data);
 
-bool compute_step_2(std::vector<WorkerData> &worker_data, LidarOdometryParams &params, double &ts_failure);
-void compute_step_2_fast_forward_motion(std::vector<WorkerData> &worker_data, LidarOdometryParams &params);
+bool initialize_lidar_odometry(
+    std::vector<WorkerData>& worker_data,
+    LidarOdometryParams& params,
+    double& ts_failure,
+    std::atomic<float>& loProgress,
+    const std::atomic<bool>& pause,
+    bool debugMsg,
+    LookupStats& lookup_stats);
 
-//! This namespace contains functions for loading calibration file (.json and .sn).
+bool process_worker_step_1(
+    WorkerData& worker_data,
+    const WorkerData& prev_worker_data,
+    const WorkerData& prev_prev_worker_data,
+    LidarOdometryParams& params,
+    const std::atomic<bool>& pause,
+    int i,
+    bool debug,
+    LookupStats& lookup_stats,
+    bool debugMsg,
+    int64_t& total_iterations,
+    double& total_optimization_time_seconds,
+    double& acc_distance,
+    size_t worker_data_size,
+    std::atomic<float>& loProgress,
+    double& ts_failure);
+
+bool process_worker_step_2(
+    WorkerData& worker_data,
+    const WorkerData& prev_worker_data,
+    const WorkerData& prev_prev_worker_data,
+    LidarOdometryParams& params,
+    const std::atomic<bool>& pause,
+    int i,
+    bool debug,
+    LookupStats& lookup_stats,
+    bool debugMsg,
+    int64_t& total_iterations,
+    double& total_optimization_time_seconds,
+    double& acc_distance,
+    size_t worker_data_size,
+    std::atomic<float>& loProgress,
+    double& ts_failure,
+    std::vector<Point3Di>& intermediate_points);
+
+bool process_worker_step_lidar_odometry_core(
+    WorkerData& worker_data,
+    const WorkerData& prev_worker_data,
+    const WorkerData& prev_prev_worker_data,
+    LidarOdometryParams& params,
+    const std::atomic<bool>& pause,
+    int i,
+    bool debug,
+    LookupStats& lookup_stats,
+    bool debugMsg,
+    int64_t& total_iterations,
+    double& total_optimization_time_seconds,
+    double& acc_distance,
+    size_t worker_data_size,
+    std::atomic<float>& loProgress,
+    double& ts_failure,
+    std::vector<Point3Di>& intermediate_points,
+    int& iter_end,
+    double& delta,
+    double& lm_factor);
+
+bool process_worker_step_update_rgd_after(
+    double& acc_distance,
+    LidarOdometryParams& params,
+    std::vector<Point3Di>& points_global,
+    WorkerData& worker_data,
+    LookupStats& lookup_stats,
+    std::vector<Point3Di>& intermediate_points);
+
+bool compute_step_2(
+    std::vector<WorkerData>& worker_data,
+    LidarOdometryParams& params,
+    double& ts_failure,
+    std::atomic<float>& loProgress,
+    const std::atomic<bool>& pause,
+    bool debugMsg);
+
+// for reconstructing worker data from step 1 output
+bool loadLaz(
+    const std::string& filename,
+    std::vector<Point3Di>& points_out,
+    const std::vector<int>& index_poses_i,
+    const std::vector<Eigen::Affine3d>& intermediate_trajectory,
+    const Eigen::Affine3d& inverse_pose);
+bool load_poses(const fs::path& poses_file, std::vector<Eigen::Affine3d>& out_poses);
+bool load_trajectory_csv(
+    const std::string& filename,
+    const Eigen::Affine3d& m_pose,
+    std::vector<std::pair<double, double>>& intermediate_trajectory_timestamps,
+    std::vector<Eigen::Affine3d>& intermediate_trajectory,
+    std::vector<Eigen::Vector3d>& imu_om_fi_ka);
+bool load_point_sizes(const std::filesystem::path& path, std::vector<int>& vector);
+bool load_index_poses(const std::filesystem::path& path, std::vector<std::vector<int>>& index_poses_out);
+bool load_worker_data_from_results(const fs::path& session_file, std::vector<WorkerData>& worker_data_out);
+
+//! This namespace contains functions for loading calibration file (.json/.mjc and .sn).
 //!
 //! Calibration file is a json file with the following format:
 //!{```json
@@ -174,38 +504,36 @@ void compute_step_2_fast_forward_motion(std::vector<WorkerData> &worker_data, Li
 //! Those two files allows to apply calibration to each point in LAZ file.
 namespace MLvxCalib
 {
-
     //! Parse the calibration file and return a map from sensor id to serial number.
-    //! Sensor id is the id is id of the point in laz file.
+    //! Sensor id is the id of the point in laz file.
     //! Serial number is the serial number of the Livox.
     //! @param filename calibration file
     //! @return map of serial number, where key is sensor id.
-    std::unordered_map<int, std::string> GetIdToSnMapping(const std::string &filename);
+    std::unordered_map<int, std::string> GetIdToSnMapping(const std::string& filename);
 
     //! Parse the calibration file and return a map from serial number to calibration.
     //! @param filename calibration file
     //! @return map of extrinsic calibration, where key is serial number of the lidar.
-    std::unordered_map<std::string, Eigen::Affine3d> GetCalibrationFromFile(const std::string &filename);
+    std::unordered_map<std::string, Eigen::Affine3d> GetCalibrationFromFile(const std::string& filename);
 
     //! Parse the calibration file and return a serial number of the Livox to use for IMU.
     //! @param filename calibration file
     //! @return serial number of the Livox to use for IMU
-    std::string GetImuSnToUse(const std::string &filename);
+    std::string GetImuSnToUse(const std::string& filename);
 
     //! Combine the id to serial number mapping and the calibration into a single map.
     //! The single map is from sensor id to calibration.
     //! @param idToSn mapping from serial number to Id number in pointcloud or IMU CSV
     //! @param calibration map of extrinsic calibration, where key is serial number of the lidar.
     //! @return map from sensor id to extrinsic calibration
-    std::unordered_map<int, Eigen::Affine3d> CombineIntoCalibration(const std::unordered_map<int, std::string> &idToSn,
-                                                                    const std::unordered_map<std::string, Eigen::Affine3d> &calibration);
+    std::unordered_map<int, Eigen::Affine3d> CombineIntoCalibration(
+        const std::unordered_map<int, std::string>& idToSn, const std::unordered_map<std::string, Eigen::Affine3d>& calibration);
     //! Get the id of the IMU to use.
     //! @param idToSn mapping from serial number to Id number in pointcloud or IMU CSV
     //! @param snToUse serial number of the Livox to use for IMU
     //! @return id of the IMU to use
-    int GetImuIdToUse(const std::unordered_map<int, std::string> &idToSn, const std::string &snToUse);
-}
+    int GetImuIdToUse(const std::unordered_map<int, std::string>& idToSn, const std::string& snToUse);
+} // namespace MLvxCalib
 
-void Consistency(std::vector<WorkerData> &worker_data, LidarOdometryParams &params);
-void Consistency2(std::vector<WorkerData> &worker_data, LidarOdometryParams &params);
-#endif
+void Consistency(std::vector<WorkerData>& worker_data, const LidarOdometryParams& params);
+void Consistency2(std::vector<WorkerData>& worker_data, const LidarOdometryParams& params);

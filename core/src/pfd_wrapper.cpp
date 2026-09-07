@@ -1,35 +1,98 @@
-#include "pfd_wrapper.hpp"
+#include <Core/pfd_wrapper.hpp>
+
 #include <portable-file-dialogs.h>
-namespace mandeye::fd{
-    
-    std::vector<std::string> OpenFileDialog(const std::string& title, const std::vector<std::string>&filter, bool multiselect)
+
+#include <filesystem>
+#include <iostream>
+#include <memory>
+
+namespace mandeye::fd
+{
+    std::string OpenFileDialogOneFile(const std::string& title, const std::vector<std::string>& filter)
+    {
+        auto sel = OpenFileDialog(title, filter, false);
+        if (sel.empty())
+            return "";
+
+        return std::filesystem::path(sel.back()).lexically_normal().string();
+    }
+
+    std::vector<std::string> OpenFileDialog(const std::string& title, const std::vector<std::string>& filter, bool multiselect)
     {
         std::vector<std::string> files;
         static std::shared_ptr<pfd::open_file> open_file;
-        const auto t = [&]() {
-            files = pfd::open_file(title, "C:\\", filter, multiselect).result();
 
-        };
-        std::thread t1(t);
-        t1.join();
+        files = pfd::open_file(title, internal::lastLocationHint, filter, multiselect).result();
 
+        for (auto& f : files)
+        {
+            f = std::filesystem::path(f).lexically_normal().string();
+        }
+
+        if (!files.empty())
+        {
+            std::filesystem::path pfile(files.back());
+            if (pfile.has_parent_path())
+            {
+                internal::lastLocationHint = pfile.parent_path().string();
+            }
+        }
         return files;
     }
 
-    std::string SaveFileDialog(const std::string& title, const std::vector<std::string>&filter)
+    std::string SaveFileDialog(
+        const std::string& title,
+        const std::vector<std::string>& filter,
+        const std::string& defaultExtension,
+        const std::string& defaultFileName)
     {
         std::string file;
         static std::shared_ptr<pfd::save_file> save_file;
-        const auto t = [&]() {
-            file = pfd::save_file(title, "C:\\", filter).result();
-        };
-        std::thread t1(t);
-        t1.join();
+
+        // build default path (directory + suggested filename)
+        //
+        // portable-file-dialogs' macOS backend shells out to AppleScript's
+        // "choose file name", which only accepts an *existing folder* for
+        // "default location" (it has no separate "default name" parameter
+        // wired up). Appending defaultFileName turns this into a path to a
+        // file that doesn't exist yet, so the folder resolution throws
+        // before any dialog is shown. The zenity/kdialog/Windows backends
+        // are fine with a combined dir+filename path, so only combine them
+        // there.
+        std::string defaultPath = internal::lastLocationHint;
+#ifndef __APPLE__
+        if (!defaultFileName.empty())
+        {
+            defaultPath = (std::filesystem::path(internal::lastLocationHint) / defaultFileName).string();
+        }
+#endif
+
+        file = pfd::save_file(title, defaultPath, filter).result();
+
+        if (file.empty())
+            return file;
+
+        std::filesystem::path pfile(file);
+        if (!pfile.has_extension())
+            file += defaultExtension;
+
+        if (pfile.has_parent_path())
+            internal::lastLocationHint = pfile.parent_path().string();
+
         return file;
     }
 
-      void OutOfMemMessage()
-      {
+    std::string SelectFolder(const std::string& title)
+    {
+        std::string output_folder_name = "";
+
+        output_folder_name = pfd::select_folder(title, internal::lastLocationHint).result();
+
+        return output_folder_name;
+    }
+
+    void OutOfMemMessage()
+    {
         std::cerr << "Adjust paging / swap memory with tips available here : "
                      "https://github.com/MapsHD/HDMapping/tree/main/doc/"
                      "virtual_memory.md "
@@ -41,7 +104,8 @@ namespace mandeye::fd{
             "Please follow guidlines available here : "
             "https://github.com/MapsHD/HDMapping/tree/main/doc/"
             "virtual_memory.md",
-            pfd::choice::ok, pfd::icon::error);
+            pfd::choice::ok,
+            pfd::icon::error);
         message.result();
-      }
-}
+    }
+} // namespace mandeye::fd

@@ -1,6 +1,6 @@
 include_guard()
 
-set(IMGUIZMO_LIBRARY_DIRECTORY ${EXTERNAL_LIBRARIES_DIRECTORY}/ImGuizmo)
+set(IMGUIZMO_LIBRARY_DIRECTORY ${THIRDPARTY_DIRECTORY}/ImGuizmo)
 
 set(IMGUIZMO_SOURCE_FILES
     ${IMGUIZMO_LIBRARY_DIRECTORY}/GraphEditor.cpp
@@ -19,7 +19,9 @@ set(IMGUIZMO_HEADER_FILES
 
 set(IMGUIZMO_FILES ${IMGUIZMO_SOURCE_FILES} ${IMGUIZMO_HEADER_FILES})
 
-add_library(imguizmo STATIC ${IMGUIZMO_FILES})
+add_library(imguizmo STATIC)
+target_sources(imguizmo PRIVATE ${IMGUIZMO_FILES})
 target_include_directories(
     imguizmo PRIVATE ${IMGUIZMO_LIBRARY_DIRECTORY}
-    ${EXTERNAL_LIBRARIES_DIRECTORY}/imgui)
+    ${THIRDPARTY_DIRECTORY}/imgui)
+target_link_libraries(imguizmo PRIVATE imgui)

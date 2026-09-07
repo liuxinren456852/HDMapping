@@ -1,12 +1,13 @@
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 4.0.0)
 
 project(precision_forestry_tools)
 
 add_executable(precision_forestry_tools 
   precision_forestry_tools.cpp 
-  ${REPOSITORY_DIRECTORY}/core/src/local_shape_features.cpp
-  ${REPOSITORY_DIRECTORY}/core/src/surface.cpp
-  ${REPOSITORY_DIRECTORY}/core/src/hash_utils.cpp)
+  surface.cpp
+  local_shape_features.cpp)
+
+target_compile_definitions(precision_forestry_tools PRIVATE -DWITH_GUI=1)
 
 target_link_libraries(
   precision_forestry_tools
@@ -22,15 +23,15 @@ target_include_directories(
   precision_forestry_tools
   PRIVATE include
           ${REPOSITORY_DIRECTORY}/core/include
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/glm
+          ${THIRDPARTY_DIRECTORY}/glm
           ${EIGEN3_INCLUDE_DIR}
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/imgui
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/imgui/backends
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/ImGuizmo
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/glew-2.2.0/include
+          ${THIRDPARTY_DIRECTORY}/imgui
+          ${THIRDPARTY_DIRECTORY}/imgui/backends
+          ${THIRDPARTY_DIRECTORY}/ImGuizmo
+          ${THIRDPARTY_DIRECTORY}/glew-cmake/include
           ${FREEGLUT_INCLUDE_DIR}
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/json/include
-          ${EXTERNAL_LIBRARIES_DIRECTORY}/portable-file-dialogs-master
+          ${THIRDPARTY_DIRECTORY}/json/include
+          ${THIRDPARTY_DIRECTORY}/portable-file-dialogs-master
           ${LASZIP_INCLUDE_DIR}/LASzip/include)
 
 if(WIN32)
@@ -41,6 +42,10 @@ if(WIN32)
       ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:precision_forestry_tools>
       $<TARGET_FILE_DIR:precision_forestry_tools>
     COMMAND_EXPAND_LISTS)
+endif()
+
+if (MSVC)
+    target_compile_options(precision_forestry_tools PRIVATE /bigobj)
 endif()
 
 install (TARGETS precision_forestry_tools DESTINATION bin)

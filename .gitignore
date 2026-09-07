@@ -50,6 +50,7 @@ build
 .ipynb_checkpoints/
 
 *.pyc
+*.pyd
 
 data/
 
@@ -57,5 +58,22 @@ data/
 .idea/
 cmake-*
 
+.vs/
 .vscode/
 3pbinary/
+
+# imgui
+imgui.ini
+/out/install/x64-Debug
+/out/install/x64-Release/bin
+/out/install/x64-Release
+/out_old/install
+
+/.gitmodules
+/build2
+/build3
+
+# deploy_mandeye.bat output
+/deploy
+
+.cache/

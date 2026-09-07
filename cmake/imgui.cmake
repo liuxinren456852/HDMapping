@@ -1,6 +1,6 @@
 include_guard()
 
-set(IMGUI_LIBRARY_DIRECTORY ${EXTERNAL_LIBRARIES_DIRECTORY}/imgui)
+set(IMGUI_LIBRARY_DIRECTORY ${THIRDPARTY_DIRECTORY}/imgui)
 set(IMGUI_LIBRARY_BACKEND_DIRECTORY ${IMGUI_LIBRARY_DIRECTORY}/backends)
 
 set(IMGUI_SOURCE_FILES
@@ -19,7 +19,11 @@ set(IMGUI_HEADER_FILES
 
 set(IMGUI_FILES ${IMGUI_SOURCE_FILES} ${IMGUI_HEADER_FILES})
 
-add_library(imgui STATIC ${IMGUI_FILES})
+add_library(imgui STATIC)
+target_sources(imgui PRIVATE ${IMGUI_FILES})
 target_include_directories(
     imgui PRIVATE ${IMGUI_LIBRARY_DIRECTORY} ${IMGUI_LIBRARY_BACKEND_DIRECTORY}
-    ${EXTERNAL_LIBRARIES_DIRECTORY}/freeglut-3.2.2/include)
+    ${THIRDPARTY_DIRECTORY}/freeglut/include)
+
+# public : projects linking this library will use that definition
+target_compile_definitions(imgui PUBLIC -DImDrawIdx=unsigned\ int)

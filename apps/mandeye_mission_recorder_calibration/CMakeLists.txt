@@ -1,0 +1,69 @@
+cmake_minimum_required(VERSION 4.0.0)
+
+project(mandeye_mission_recorder_calibration)
+
+# Source files
+set(SOURCES
+  mandeye_mission_recorder_calibration.cpp
+  ../lidar_odometry_step_1/lidar_odometry_utils.cpp
+  ../lidar_odometry_step_1/lidar_odometry_utils_optimizers.cpp
+    "../../core/src/utils.cpp"
+)
+
+# Windows: add resource file
+if(WIN32)
+    list(APPEND SOURCES resource.rc)
+endif()
+
+add_executable(
+  mandeye_mission_recorder_calibration ${SOURCES}
+)
+
+target_include_directories(
+  mandeye_mission_recorder_calibration
+  PRIVATE include
+  ${REPOSITORY_DIRECTORY}/core/include
+  ${REPOSITORY_DIRECTORY}/core_hd_mapping/include
+  ${THIRDPARTY_DIRECTORY}
+  ${THIRDPARTY_DIRECTORY}/glm
+  ${EIGEN3_INCLUDE_DIR}
+  ${THIRDPARTY_DIRECTORY}/imgui
+  ${THIRDPARTY_DIRECTORY}/imgui/backends
+  ${THIRDPARTY_DIRECTORY}/ImGuizmo
+  ${THIRDPARTY_DIRECTORY}/glew-cmake/include
+  ${FREEGLUT_INCLUDE_DIR}
+  ${THIRDPARTY_DIRECTORY}/json/include
+  ${THIRDPARTY_DIRECTORY}/portable-file-dialogs-master
+  ${LASZIP_INCLUDE_DIR}/LASzip/include
+  ${THIRDPARTY_DIRECTORY}/observation_equations/codes
+  ${THIRDPARTY_DIRECTORY}/vqf/vqf/cpp)
+
+target_link_libraries(
+  mandeye_mission_recorder_calibration
+  PRIVATE vqf
+  unordered_dense::unordered_dense
+  spdlog::spdlog
+  UTL::include
+  ${FREEGLUT_LIBRARY}
+  ${OPENGL_gl_LIBRARY}
+  OpenGL::GLU
+  ${PLATFORM_LASZIP_LIB}
+  ${CORE_LIBRARIES}
+  ${GUI_LIBRARIES}
+  ${PLATFORM_MISCELLANEOUS_LIBS})
+
+if(WIN32)
+  add_custom_command(
+    TARGET mandeye_mission_recorder_calibration
+    POST_BUILD
+    COMMAND
+    ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:mandeye_mission_recorder_calibration>
+    $<TARGET_FILE_DIR:mandeye_mission_recorder_calibration>
+    COMMAND_EXPAND_LISTS)
+endif()
+
+if (MSVC)
+    target_compile_options(mandeye_mission_recorder_calibration PRIVATE /bigobj)
+endif()
+
+install(TARGETS mandeye_mission_recorder_calibration DESTINATION bin)

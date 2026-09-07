@@ -1,23 +1,19 @@
-#include <icp.h>
-#include <iostream>
-#include <fstream>
-#include <thread>
+#include <pch/pch.h>
 
-#include <transformations.h>
-#include <m_estimators.h>
+#include <Core/icp.h>
+#include <Core/m_estimators.h>
+#include <Core/transformations.h>
 
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian.h>
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_cw_jacobian.h>
-
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_rodrigues_wc_jacobian.h>
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_rodrigues_cw_jacobian.h>
-
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_quaternion_wc_jacobian.h>
-#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_quaternion_cw_jacobian.h>
 #include <python-scripts/constraints/quaternion_constraint_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_quaternion_cw_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_quaternion_wc_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_rodrigues_cw_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_rodrigues_wc_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_cw_jacobian.h>
+#include <python-scripts/point-to-point-metrics/point_to_point_source_to_target_tait_bryan_wc_jacobian.h>
 
-Eigen::Matrix<double, 3, 1> get_delta_point_to_point_tait_bryan(ICP::PoseConvention pose_convention,
-                                                                Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 1> get_delta_point_to_point_tait_bryan(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
     Eigen::Matrix<double, 3, 1> delta;
 
@@ -37,8 +33,22 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_tait_bryan(ICP::PoseConvent
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_tait_bryan_wc(delta_x, delta_y, delta_z,
-                                                      pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_tait_bryan_wc(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.om,
+            pose_s.fi,
+            pose_s.ka,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -49,8 +59,22 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_tait_bryan(ICP::PoseConvent
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_tait_bryan_cw(delta_x, delta_y, delta_z,
-                                                      pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_tait_bryan_cw(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.om,
+            pose_s.fi,
+            pose_s.ka,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -59,8 +83,8 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_tait_bryan(ICP::PoseConvent
     return delta;
 }
 
-Eigen::Matrix<double, 3, 1> get_delta_point_to_point_rodrigues(ICP::PoseConvention pose_convention,
-                                                               Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 1> get_delta_point_to_point_rodrigues(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
     Eigen::Matrix<double, 3, 1> delta;
 
@@ -80,8 +104,22 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_rodrigues(ICP::PoseConventi
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_rodrigues_wc(delta_x, delta_y, delta_z,
-                                                     pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_rodrigues_wc(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.sx,
+            pose_s.sy,
+            pose_s.sz,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -92,8 +130,22 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_rodrigues(ICP::PoseConventi
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_rodrigues_cw(delta_x, delta_y, delta_z,
-                                                     pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_rodrigues_cw(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.sx,
+            pose_s.sy,
+            pose_s.sz,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -102,8 +154,8 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_rodrigues(ICP::PoseConventi
     return delta;
 }
 
-Eigen::Matrix<double, 3, 1> get_delta_point_to_point_quaternion(ICP::PoseConvention pose_convention,
-                                                                Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 1> get_delta_point_to_point_quaternion(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
     Eigen::Matrix<double, 3, 1> delta;
 
@@ -123,8 +175,23 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_quaternion(ICP::PoseConvent
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_quaternion_wc(delta_x, delta_y, delta_z,
-                                                      pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_quaternion_wc(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.q0,
+            pose_s.q1,
+            pose_s.q2,
+            pose_s.q3,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -135,8 +202,23 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_quaternion(ICP::PoseConvent
         double delta_x;
         double delta_y;
         double delta_z;
-        point_to_point_source_to_target_quaternion_cw(delta_x, delta_y, delta_z,
-                                                      pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z(), p_t.x(), p_t.y(), p_t.z());
+        point_to_point_source_to_target_quaternion_cw(
+            delta_x,
+            delta_y,
+            delta_z,
+            pose_s.px,
+            pose_s.py,
+            pose_s.pz,
+            pose_s.q0,
+            pose_s.q1,
+            pose_s.q2,
+            pose_s.q3,
+            p_s.x(),
+            p_s.y(),
+            p_s.z(),
+            p_t.x(),
+            p_t.y(),
+            p_t.z());
 
         delta(0, 0) = delta_x;
         delta(1, 0) = delta_y;
@@ -145,10 +227,9 @@ Eigen::Matrix<double, 3, 1> get_delta_point_to_point_quaternion(ICP::PoseConvent
     return delta;
 }
 
-Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_tait_bryan(ICP::PoseConvention pose_convention,
-                                                                                    Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_tait_bryan(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
-
     Eigen::Matrix<double, 3, 6, Eigen::RowMajor> jacobian;
 
     TaitBryanPose pose_s;
@@ -164,19 +245,20 @@ Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_tait_br
 
     if (pose_convention == ICP::PoseConvention::wc)
     {
-        point_to_point_source_to_target_tait_bryan_wc_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_tait_bryan_wc_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z());
     }
     if (pose_convention == ICP::PoseConvention::cw)
     {
-        point_to_point_source_to_target_tait_bryan_cw_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_tait_bryan_cw_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.om, pose_s.fi, pose_s.ka, p_s.x(), p_s.y(), p_s.z());
     }
     return jacobian;
 }
 
-Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_rodrigues(ICP::PoseConvention pose_convention,
-                                                                                   Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_rodrigues(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
-
     Eigen::Matrix<double, 3, 6, Eigen::RowMajor> jacobian;
 
     RodriguesPose pose_s;
@@ -192,19 +274,20 @@ Eigen::Matrix<double, 3, 6, Eigen::RowMajor> get_point_to_point_jacobian_rodrigu
 
     if (pose_convention == ICP::PoseConvention::wc)
     {
-        point_to_point_source_to_target_rodrigues_wc_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_rodrigues_wc_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z());
     }
     if (pose_convention == ICP::PoseConvention::cw)
     {
-        point_to_point_source_to_target_rodrigues_cw_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_rodrigues_cw_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.sx, pose_s.sy, pose_s.sz, p_s.x(), p_s.y(), p_s.z());
     }
     return jacobian;
 }
 
-Eigen::Matrix<double, 3, 7, Eigen::RowMajor> get_point_to_point_jacobian_quaternion(ICP::PoseConvention pose_convention,
-                                                                                    Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
+Eigen::Matrix<double, 3, 7, Eigen::RowMajor> get_point_to_point_jacobian_quaternion(
+    ICP::PoseConvention pose_convention, Eigen::Affine3d m_pose_wc, Eigen::Vector3d p_s, Eigen::Vector3d p_t)
 {
-
     Eigen::Matrix<double, 3, 7, Eigen::RowMajor> jacobian;
 
     QuaternionPose pose_s;
@@ -220,34 +303,54 @@ Eigen::Matrix<double, 3, 7, Eigen::RowMajor> get_point_to_point_jacobian_quatern
 
     if (pose_convention == ICP::PoseConvention::wc)
     {
-        point_to_point_source_to_target_quaternion_wc_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_quaternion_wc_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z());
     }
     if (pose_convention == ICP::PoseConvention::cw)
     {
-        point_to_point_source_to_target_quaternion_cw_jacobian(jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z());
+        point_to_point_source_to_target_quaternion_cw_jacobian(
+            jacobian, pose_s.px, pose_s.py, pose_s.pz, pose_s.q0, pose_s.q1, pose_s.q2, pose_s.q3, p_s.x(), p_s.y(), p_s.z());
     }
     return jacobian;
 }
 
 //-
-bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds_container)
+bool ICP::optimization_point_to_point_source_to_target(PointClouds& point_clouds_container)
 {
     if (is_rodrigues || is_quaternion)
     {
         for (size_t i = 0; i < point_clouds_container.point_clouds.size(); i++)
         {
-            if (!point_clouds_container.point_clouds[i].fixed)
+            // if (!point_clouds_container.point_clouds[i].fixed)
+            //{
+            TaitBryanPose pose;
+            if (!point_clouds_container.point_clouds[i].fixed_x)
             {
-                TaitBryanPose pose;
                 pose.px = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                pose.py = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                pose.pz = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                pose.om = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                pose.fi = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                pose.ka = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
-                Eigen::Affine3d m = affine_matrix_from_pose_tait_bryan(pose);
-                point_clouds_container.point_clouds[i].m_pose = point_clouds_container.point_clouds[i].m_pose * m;
             }
+            if (!point_clouds_container.point_clouds[i].fixed_y)
+            {
+                pose.py = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
+            }
+            if (!point_clouds_container.point_clouds[i].fixed_z)
+            {
+                pose.pz = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
+            }
+            if (!point_clouds_container.point_clouds[i].fixed_om)
+            {
+                pose.om = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
+            }
+            if (!point_clouds_container.point_clouds[i].fixed_fi)
+            {
+                pose.fi = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
+            }
+            if (!point_clouds_container.point_clouds[i].fixed_ka)
+            {
+                pose.ka = (((rand() % 1000000000) / 1000000000.0) - 0.5) * 2.0 * 0.000001;
+            }
+            Eigen::Affine3d m = affine_matrix_from_pose_tait_bryan(pose);
+            point_clouds_container.point_clouds[i].m_pose = point_clouds_container.point_clouds[i].m_pose * m;
+            //}
         }
     }
 
@@ -322,28 +425,35 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
     std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> covariance_matrices_after7x7;
 
     if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz) {
-        covariance_matrices_before6x6 = compute_covariance_matrices_tait_bryan_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_before6x6 = compute_covariance_matrices_tait_bryan_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }
     if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues) {
-        covariance_matrices_before6x6 = compute_covariance_matrices_rodrigues_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_before6x6 = compute_covariance_matrices_rodrigues_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }
     if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion) {
-        covariance_matrices_before7x7 = compute_covariance_matrices_quaternion_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_before7x7 = compute_covariance_matrices_quaternion_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }*/
 
     //----------------------------------------------------------------------------------------------------
     double rms = 0.0;
-    optimization_point_to_point_source_to_target(point_clouds_container, pose_convention, optimization_algorithm, rotation_matrix_parametrization, rms, false);
+    optimization_point_to_point_source_to_target(
+        point_clouds_container, pose_convention, optimization_algorithm, rotation_matrix_parametrization, rms, false);
     //----------------------------------------------------------------------------------------------------
 
     /*if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz) {
-        covariance_matrices_after6x6 = compute_covariance_matrices_tait_bryan_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_after6x6 = compute_covariance_matrices_tait_bryan_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }
     if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues) {
-        covariance_matrices_after6x6 = compute_covariance_matrices_rodrigues_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_after6x6 = compute_covariance_matrices_rodrigues_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }
     if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion) {
-        covariance_matrices_after7x7 = compute_covariance_matrices_quaternion_point_to_point_source_to_target(point_clouds_container, pose_convention);
+        covariance_matrices_after7x7 = compute_covariance_matrices_quaternion_point_to_point_source_to_target(point_clouds_container,
+    pose_convention);
     }
 
     for (size_t i = 0; i < point_clouds_container.point_clouds.size(); i++) {
@@ -405,7 +515,7 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
     return true;
 }
 
-bool ICP::optimization_point_to_point_source_to_target_compute_rms(PointClouds &point_clouds_container, double &rms)
+bool ICP::optimization_point_to_point_source_to_target_compute_rms(PointClouds& point_clouds_container, double& rms)
 {
     OptimizationAlgorithm optimization_algorithm;
     if (is_gauss_newton)
@@ -473,21 +583,34 @@ bool ICP::optimization_point_to_point_source_to_target_compute_rms(PointClouds &
     }
 
     //----------------------------------------------------------------------------------------------------
-    optimization_point_to_point_source_to_target(point_clouds_container, pose_convention, optimization_algorithm, rotation_matrix_parametrization, rms, true);
+    optimization_point_to_point_source_to_target(
+        point_clouds_container, pose_convention, optimization_algorithm, rotation_matrix_parametrization, rms, true);
     //----------------------------------------------------------------------------------------------------
 
     return true;
 }
 
-void alpha_point_to_point_job(ICP::Job *job, std::vector<double> *alphas, float barron_c, std::vector<std::vector<std::pair<int, int>>> *all_nns,
-                              std::vector<PointCloud> *point_clouds, std::vector<int> *j_indexes, Eigen::Affine3d m_pose_s_wc, float scale_factor_x, float scale_factor_y, float scale_factor_z,
-                              std::vector<double> *sums_x, std::vector<double> *sums_y, std::vector<double> *sums_z, int index_source, ICP::PoseConvention pose_convention,
-                              ICP::RotationMatrixParametrization rotation_matrix_parametrization)
+void alpha_point_to_point_job(
+    ICP::Job* job,
+    std::vector<double>* alphas,
+    float barron_c,
+    std::vector<std::vector<std::pair<int, int>>>* all_nns,
+    std::vector<PointCloud>* point_clouds,
+    std::vector<int>* j_indexes,
+    Eigen::Affine3d m_pose_s_wc,
+    float scale_factor_x,
+    float scale_factor_y,
+    float scale_factor_z,
+    std::vector<double>* sums_x,
+    std::vector<double>* sums_y,
+    std::vector<double>* sums_z,
+    int index_source,
+    ICP::PoseConvention pose_convention,
+    ICP::RotationMatrixParametrization rotation_matrix_parametrization)
 {
-
     for (size_t ii = job->index_begin_inclusive; ii < job->index_end_exclusive; ii++)
     {
-        double &alpha = (*alphas)[ii];
+        double& alpha = (*alphas)[ii];
         double Z_tilde = get_approximate_partition_function(-10, 10, alpha, barron_c, 100);
         double sum_x = 0;
         double sum_y = 0;
@@ -498,7 +621,8 @@ void alpha_point_to_point_job(ICP::Job *job, std::vector<double> *alphas, float 
             for (size_t nj = 0; nj < (*all_nns)[ni].size(); nj++)
             {
                 Eigen::Vector3d p_s((*point_clouds)[index_source].points_local[(*all_nns)[ni][nj].first]);
-                Eigen::Vector3d p_t((*point_clouds)[(*j_indexes)[ni]].m_pose * (*point_clouds)[(*j_indexes)[ni]].points_local[(*all_nns)[ni][nj].second]);
+                Eigen::Vector3d p_t(
+                    (*point_clouds)[(*j_indexes)[ni]].m_pose * (*point_clouds)[(*j_indexes)[ni]].points_local[(*all_nns)[ni][nj].second]);
 
                 Eigen::Matrix<double, 3, 1> delta;
                 if (rotation_matrix_parametrization == ICP::RotationMatrixParametrization::tait_bryan_xyz)
@@ -542,13 +666,19 @@ void alpha_point_to_point_job(ICP::Job *job, std::vector<double> *alphas, float 
     }
 }
 
-bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds_container,
-                                                       PoseConvention pose_convention, OptimizationAlgorithm optimization_algorithm, RotationMatrixParametrization rotation_matrix_parametrization, double &out_rms, bool compute_only_rms)
+bool ICP::optimization_point_to_point_source_to_target(
+    PointClouds& point_clouds_container,
+    PoseConvention pose_convention,
+    OptimizationAlgorithm optimization_algorithm,
+    RotationMatrixParametrization rotation_matrix_parametrization,
+    double& out_rms,
+    bool compute_only_rms)
 {
     bool precompute_rgd = false;
 
     int number_of_unknowns_per_pose;
-    if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz || rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
+    if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz ||
+        rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
     {
         number_of_unknowns_per_pose = 6;
     }
@@ -560,7 +690,7 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
     if (precompute_rgd)
     {
         int counter_computed_rgd = 1;
-        for (auto &pc : point_clouds_container.point_clouds)
+        for (auto& pc : point_clouds_container.point_clouds)
         {
             std::cout << "computing rgd [" << counter_computed_rgd++ << "] of " << point_clouds_container.point_clouds.size() << std::endl;
             pc.build_rgd();
@@ -572,11 +702,9 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
     else
     {
         // int counter_computed_nv = 1;
-        for (auto &pc : point_clouds_container.point_clouds)
+        for (auto& pc : point_clouds_container.point_clouds)
         {
             pc.points_type.resize(pc.points_local.size());
-            // std::cout << "computing nv [" << counter_computed_nv++ << "] of " << point_clouds_container.point_clouds.size() << std::endl;
-            // pc.compute_normal_vectors(0.5);
         }
     }
 
@@ -640,7 +768,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                             point_clouds_container.point_clouds[j].cout_rgd();
                         }
 
-                        std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                        std::vector<std::pair<int, int>> nns =
+                            point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
 
                         if (!precompute_rgd)
                         {
@@ -670,8 +799,25 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
 
                 for (size_t k = 0; k < jobs.size(); k++)
                 {
-                    threads.push_back(std::thread(alpha_point_to_point_job, &jobs[k], &alphas, barron_c, &all_nns, &point_clouds_container.point_clouds, &j_indexes,
-                                                  point_clouds_container.point_clouds[i].m_pose, scale_factor_x, scale_factor_y, scale_factor_z, &sums_x, &sums_y, &sums_z, i, pose_convention, rotation_matrix_parametrization));
+                    threads.push_back(
+                        std::thread(
+                            alpha_point_to_point_job,
+                            &jobs[k],
+                            &alphas,
+                            barron_c,
+                            &all_nns,
+                            &point_clouds_container.point_clouds,
+                            &j_indexes,
+                            point_clouds_container.point_clouds[i].m_pose,
+                            scale_factor_x,
+                            scale_factor_y,
+                            scale_factor_z,
+                            &sums_x,
+                            &sums_y,
+                            &sums_z,
+                            i,
+                            pose_convention,
+                            rotation_matrix_parametrization));
                 }
 
                 for (size_t j = 0; j < threads.size(); j++)
@@ -697,7 +843,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                         barron_alpha_z = alphas[s];
                     }
                 }
-                std::cout << "barron_alpha_x: " << barron_alpha_x << " barron_alpha_y: " << barron_alpha_y << " barron_alpha_z: " << barron_alpha_z << std::endl;
+                std::cout << "barron_alpha_x: " << barron_alpha_x << " barron_alpha_y: " << barron_alpha_y
+                          << " barron_alpha_z: " << barron_alpha_z << std::endl;
             }
 
             for (int j = 0; j < point_clouds_container.point_clouds.size(); j++)
@@ -715,7 +862,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     }
 
                     std::cout << "computing nns start" << std::endl;
-                    std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                    std::vector<std::pair<int, int>> nns =
+                        point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
                     std::cout << "computing nns finished nns.size(): " << nns.size() << std::endl;
 
                     if (!precompute_rgd)
@@ -727,20 +875,25 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     for (size_t k = 0; k < nns.size(); k++)
                     {
                         Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                        Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                        Eigen::Vector3d p_t(
+                            point_clouds_container.point_clouds[j].m_pose *
+                            point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
                         Eigen::Matrix<double, 3, 1> delta;
                         if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz)
                         {
-                            delta = get_delta_point_to_point_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                            delta = get_delta_point_to_point_tait_bryan(
+                                pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                         }
                         if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
                         {
-                            delta = get_delta_point_to_point_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                            delta = get_delta_point_to_point_rodrigues(
+                                pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                         }
                         if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion)
                         {
-                            delta = get_delta_point_to_point_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                            delta = get_delta_point_to_point_quaternion(
+                                pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                         }
 
                         if (!(delta(0, 0) == delta(0, 0)))
@@ -762,20 +915,24 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                             Eigen::Matrix<double, 3, 7> jacobian3x7;
                             if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz)
                             {
-                                jacobian3x6 = get_point_to_point_jacobian_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                                jacobian3x6 = get_point_to_point_jacobian_tait_bryan(
+                                    pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                             }
                             if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
                             {
-                                jacobian3x6 = get_point_to_point_jacobian_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                                jacobian3x6 = get_point_to_point_jacobian_rodrigues(
+                                    pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                             }
                             if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion)
                             {
-                                jacobian3x7 = get_point_to_point_jacobian_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                                jacobian3x7 = get_point_to_point_jacobian_quaternion(
+                                    pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
                             }
 
                             int ir = tripletListB.size();
 
-                            if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz || rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
+                            if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz ||
+                                rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
                             {
                                 int ic = i * number_of_unknowns_per_pose;
                                 for (int row = 0; row < 3; row++)
@@ -807,8 +964,10 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                             if (is_adaptive_robust_kernel)
                             {
                                 tripletListP.emplace_back(ir, ir, get_barron_w(delta(0, 0) * scale_factor_x, barron_alpha_x, barron_c));
-                                tripletListP.emplace_back(ir + 1, ir + 1, get_barron_w(delta(1, 0) * scale_factor_y, barron_alpha_y, barron_c));
-                                tripletListP.emplace_back(ir + 2, ir + 2, get_barron_w(delta(2, 0) * scale_factor_z, barron_alpha_z, barron_c));
+                                tripletListP.emplace_back(
+                                    ir + 1, ir + 1, get_barron_w(delta(1, 0) * scale_factor_y, barron_alpha_y, barron_c));
+                                tripletListP.emplace_back(
+                                    ir + 2, ir + 2, get_barron_w(delta(2, 0) * scale_factor_z, barron_alpha_z, barron_c));
                             }
                             else
                             {
@@ -822,13 +981,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                             tripletListB.emplace_back(ir + 2, 0, delta(2, 0));
                         }
 
-
                         rms += delta(0, 0) * delta(0, 0) + delta(1, 0) * delta(1, 0) + delta(2, 0) * delta(2, 0);
                         sum_obs += 3.0;
-
-                        //if(sqrt(delta(0, 0) * delta(0, 0) + delta(1, 0) * delta(1, 0) + delta(2, 0) * delta(2, 0)) > 0.1){
-                        //    std::cout << sqrt(delta(0, 0) * delta(0, 0) + delta(1, 0) * delta(1, 0) + delta(2, 0) * delta(2, 0)) << std::endl;
-                        //}
                     }
 
                     double curr_rms = sqrt(rms / sum_obs);
@@ -836,12 +990,6 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     std::cout << "number of observations: " << sum_obs << std::endl;
                 }
             }
-
-            // if (!precompute_rgd)
-            //{
-            //     point_clouds_container.point_clouds[i].buckets.clear();
-            //     point_clouds_container.point_clouds[i].index_pairs.clear();
-            // }
         }
         rms = sqrt(rms / sum_obs);
         out_rms = rms;
@@ -850,7 +998,7 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
             return true;
         }
 
-        for (int i = 0; i < point_clouds_container.point_clouds.size(); i++)
+        /*for (int i = 0; i < point_clouds_container.point_clouds.size(); i++)
         {
             for (int gp = 0; gp < point_clouds_container.point_clouds[i].available_geo_points.size(); gp++)
             {
@@ -864,15 +1012,18 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     Eigen::Matrix<double, 3, 1> delta;
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz)
                     {
-                        delta = get_delta_point_to_point_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        delta = get_delta_point_to_point_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s,
+        p_t);
                     }
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
                     {
-                        delta = get_delta_point_to_point_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        delta = get_delta_point_to_point_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s,
+        p_t);
                     }
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion)
                     {
-                        delta = get_delta_point_to_point_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        delta = get_delta_point_to_point_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s,
+        p_t);
                     }
 
                     if (!(delta(0, 0) == delta(0, 0)))
@@ -892,20 +1043,24 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     Eigen::Matrix<double, 3, 7> jacobian3x7;
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz)
                     {
-                        jacobian3x6 = get_point_to_point_jacobian_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        jacobian3x6 = get_point_to_point_jacobian_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose,
+        p_s, p_t);
                     }
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
                     {
-                        jacobian3x6 = get_point_to_point_jacobian_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        jacobian3x6 = get_point_to_point_jacobian_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose,
+        p_s, p_t);
                     }
                     if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion)
                     {
-                        jacobian3x7 = get_point_to_point_jacobian_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                        jacobian3x7 = get_point_to_point_jacobian_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose,
+        p_s, p_t);
                     }
 
                     int ir = tripletListB.size();
 
-                    if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz || rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
+                    if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz || rotation_matrix_parametrization
+        == RotationMatrixParametrization::rodrigues)
                     {
                         int ic = i * number_of_unknowns_per_pose;
                         for (int row = 0; row < 3; row++)
@@ -934,13 +1089,15 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                         }
                     }
 
-                    tripletListP.emplace_back(ir, ir, point_clouds_container.point_clouds[i].available_geo_points[gp].w_x * get_cauchy_w(delta(0, 0), 1));
-                    tripletListP.emplace_back(ir + 1, ir + 1, point_clouds_container.point_clouds[i].available_geo_points[gp].w_y * get_cauchy_w(delta(1, 0), 1));
-                    tripletListP.emplace_back(ir + 2, ir + 2, point_clouds_container.point_clouds[i].available_geo_points[gp].w_z * get_cauchy_w(delta(2, 0), 1));
+                    tripletListP.emplace_back(ir, ir, point_clouds_container.point_clouds[i].available_geo_points[gp].w_x *
+        get_cauchy_w(delta(0, 0), 1)); tripletListP.emplace_back(ir + 1, ir + 1,
+        point_clouds_container.point_clouds[i].available_geo_points[gp].w_y * get_cauchy_w(delta(1, 0), 1)); tripletListP.emplace_back(ir +
+        2, ir + 2, point_clouds_container.point_clouds[i].available_geo_points[gp].w_z * get_cauchy_w(delta(2, 0), 1));
 
-                    std::cout << "delta(0, 0) " << delta(0, 0) << " get_cauchy_w(delta(0, 0), 1): " << get_cauchy_w(delta(0, 0), 1) << std::endl;
-                    std::cout << "delta(1, 0) " << delta(1, 0) << " get_cauchy_w(delta(1, 0), 1): " << get_cauchy_w(delta(1, 0), 1) << std::endl;
-                    std::cout << "delta(2, 0) " << delta(2, 0) << " get_cauchy_w(delta(2, 0), 1): " << get_cauchy_w(delta(2, 0), 1) << std::endl;
+                    std::cout << "delta(0, 0) " << delta(0, 0) << " get_cauchy_w(delta(0, 0), 1): " << get_cauchy_w(delta(0, 0), 1) <<
+        std::endl; std::cout << "delta(1, 0) " << delta(1, 0) << " get_cauchy_w(delta(1, 0), 1): " << get_cauchy_w(delta(1, 0), 1) <<
+        std::endl; std::cout << "delta(2, 0) " << delta(2, 0) << " get_cauchy_w(delta(2, 0), 1): " << get_cauchy_w(delta(2, 0), 1) <<
+        std::endl;
 
                     tripletListB.emplace_back(ir, 0, delta(0, 0));
                     tripletListB.emplace_back(ir + 1, 0, delta(1, 0));
@@ -957,12 +1114,11 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
         if (rms_geo_sum > 0)
         {
             std::cout << "rms geo: " << sqrt(rms_geo / rms_geo_sum) << std::endl;
-        }
+        }*/
 
         std::cout << "previous_rms: " << previous_rms << " rms: " << rms << std::endl;
         if (optimization_algorithm == OptimizationAlgorithm::levenberg_marguardt)
         {
-
             if (rms < previous_rms)
             {
                 if (lm_lambda < 1000000)
@@ -1067,7 +1223,9 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
         matP.setFromTriplets(tripletListP.begin(), tripletListP.end());
         matB.setFromTriplets(tripletListB.begin(), tripletListB.end());
 
-        Eigen::SparseMatrix<double> AtPA(point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose, point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose);
+        Eigen::SparseMatrix<double> AtPA(
+            point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose,
+            point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose);
         Eigen::SparseMatrix<double> AtPB(point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose, 1);
 
         Eigen::SparseMatrix<double> AtP = matA.transpose() * matP;
@@ -1076,7 +1234,9 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
 
         if (optimization_algorithm == OptimizationAlgorithm::levenberg_marguardt)
         {
-            Eigen::SparseMatrix<double> LM(point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose, point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose);
+            Eigen::SparseMatrix<double> LM(
+                point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose,
+                point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose);
             LM.setIdentity();
             LM *= lm_lambda;
             AtPA += LM;
@@ -1090,13 +1250,11 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
         Eigen::SparseMatrix<double> x = solver.solve(AtPB);
 
         std::vector<double> h_x;
-        // std::cout << "Solution: " << std::endl;
         for (int k = 0; k < x.outerSize(); ++k)
         {
             for (Eigen::SparseMatrix<double>::InnerIterator it(x, k); it; ++it)
             {
                 h_x.push_back(it.value());
-                // std::cout << "col: " << it.col() << " row: " << it.row() << " value: " << it.value() << std::endl;
             }
         }
 
@@ -1109,7 +1267,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                 std::cout << "x,y,z,om,fi,ka" << std::endl;
                 for (size_t i = 0; i < h_x.size(); i += number_of_unknowns_per_pose)
                 {
-                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << "," << h_x[i + 5] << std::endl;
+                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << ","
+                              << h_x[i + 5] << std::endl;
                 }
             }
             if (rotation_matrix_parametrization == RotationMatrixParametrization::rodrigues)
@@ -1117,7 +1276,8 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                 std::cout << "x,y,z,sx,sy,sz" << std::endl;
                 for (size_t i = 0; i < h_x.size(); i += number_of_unknowns_per_pose)
                 {
-                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << "," << h_x[i + 5] << std::endl;
+                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << ","
+                              << h_x[i + 5] << std::endl;
                 }
             }
             if (rotation_matrix_parametrization == RotationMatrixParametrization::quaternion)
@@ -1125,13 +1285,13 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                 std::cout << "x,y,z,q0,q1,q2,q3" << std::endl;
                 for (size_t i = 0; i < h_x.size(); i += number_of_unknowns_per_pose)
                 {
-                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << "," << h_x[i + 5] << "," << h_x[i + 6] << std::endl;
+                    std::cout << h_x[i] << "," << h_x[i + 1] << "," << h_x[i + 2] << "," << h_x[i + 3] << "," << h_x[i + 4] << ","
+                              << h_x[i + 5] << "," << h_x[i + 6] << std::endl;
                 }
             }
 
             for (size_t i = 0; i < point_clouds_container.point_clouds.size(); i++)
             {
-
                 if (rotation_matrix_parametrization == RotationMatrixParametrization::tait_bryan_xyz)
                 {
                     TaitBryanPose pose;
@@ -1155,11 +1315,6 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     {
                         continue;
                     }
-                    if (point_clouds_container.point_clouds[i].fixed){
-                        std::cout << "point cloud " << i << " is fixed, continue" << std::endl;
-                        continue;
-                    }
-
                     if (pose_convention == PoseConvention::wc)
                     {
                         point_clouds_container.point_clouds[i].m_pose = affine_matrix_from_pose_tait_bryan(pose);
@@ -1190,11 +1345,6 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
 
                     if (i == 0 && is_fix_first_node)
                     {
-                        continue;
-                    }
-                    if (point_clouds_container.point_clouds[i].fixed)
-                    {
-                        std::cout << "PC: " << point_clouds_container.point_clouds[i].file_name << " is fixed" << std::endl;
                         continue;
                     }
 
@@ -1231,12 +1381,6 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     {
                         continue;
                     }
-                    if (point_clouds_container.point_clouds[i].fixed)
-                    {
-                        std::cout << "PC: " << point_clouds_container.point_clouds[i].file_name << " is fixed" << std::endl;
-                        continue;
-                    }
-
                     if (pose_convention == PoseConvention::wc)
                     {
                         point_clouds_container.point_clouds[i].m_pose = affine_matrix_from_pose_quaternion(pose);
@@ -1247,20 +1391,21 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
                     }
                 }
 
-                if (!point_clouds_container.point_clouds[i].fixed)
-                {
-                    point_clouds_container.point_clouds[i].pose = pose_tait_bryan_from_affine_matrix(point_clouds_container.point_clouds[i].m_pose);
-                    point_clouds_container.point_clouds[i].gui_translation[0] = (float)point_clouds_container.point_clouds[i].pose.px;
-                    point_clouds_container.point_clouds[i].gui_translation[1] = (float)point_clouds_container.point_clouds[i].pose.py;
-                    point_clouds_container.point_clouds[i].gui_translation[2] = (float)point_clouds_container.point_clouds[i].pose.pz;
-                    point_clouds_container.point_clouds[i].gui_rotation[0] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.om);
-                    point_clouds_container.point_clouds[i].gui_rotation[1] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.fi);
-                    point_clouds_container.point_clouds[i].gui_rotation[2] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.ka);
-                }
-                else
-                {
-                    std::cout << "PC: " << point_clouds_container.point_clouds[i].file_name << " is fixed (check it!!!)" << std::endl;
-                }
+                // if (!point_clouds_container.point_clouds[i].fixed)//ToDo
+                //{
+                point_clouds_container.point_clouds[i].pose =
+                    pose_tait_bryan_from_affine_matrix(point_clouds_container.point_clouds[i].m_pose);
+                point_clouds_container.point_clouds[i].gui_translation[0] = (float)point_clouds_container.point_clouds[i].pose.px;
+                point_clouds_container.point_clouds[i].gui_translation[1] = (float)point_clouds_container.point_clouds[i].pose.py;
+                point_clouds_container.point_clouds[i].gui_translation[2] = (float)point_clouds_container.point_clouds[i].pose.pz;
+                point_clouds_container.point_clouds[i].gui_rotation[0] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.om);
+                point_clouds_container.point_clouds[i].gui_rotation[1] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.fi);
+                point_clouds_container.point_clouds[i].gui_rotation[2] = (float)rad2deg(point_clouds_container.point_clouds[i].pose.ka);
+                // }
+                // else
+                //{
+                std::cout << "PC: " << point_clouds_container.point_clouds[i].file_name << " is fixed (check it!!!)" << std::endl;
+                //}
             }
 
             if (optimization_algorithm == OptimizationAlgorithm::levenberg_marguardt)
@@ -1275,10 +1420,11 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
         else
         {
             std::cout << "AtPA=AtPB FAILED" << std::endl;
-            std::cout << "number of computed unknowns: " << h_x.size() << " should be: " << point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose << std::endl;
+            std::cout << "number of computed unknowns: " << h_x.size()
+                      << " should be: " << point_clouds_container.point_clouds.size() * number_of_unknowns_per_pose << std::endl;
 
             // clean
-            for (auto &pc : point_clouds_container.point_clouds)
+            for (auto& pc : point_clouds_container.point_clouds)
             {
                 pc.clean();
             }
@@ -1287,7 +1433,7 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
@@ -1295,9 +1441,9 @@ bool ICP::optimization_point_to_point_source_to_target(PointClouds &point_clouds
 }
 
 std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covariance_matrices_tait_bryan_point_to_point_source_to_target(
-    PointClouds &point_clouds_container, PoseConvention pose_convention)
+    PointClouds& point_clouds_container, PoseConvention pose_convention)
 {
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.build_rgd();
         pc.cout_rgd();
@@ -1315,14 +1461,17 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
         {
             if (i != j)
             {
-                std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                std::vector<std::pair<int, int>> nns =
+                    point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
 
                 for (size_t k = 0; k < nns.size(); k++)
                 {
                     Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                    Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                    Eigen::Vector3d p_t(
+                        point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
-                    Eigen::Matrix<double, 3, 1> delta = get_delta_point_to_point_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 1> delta =
+                        get_delta_point_to_point_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     if (!(delta(0, 0) == delta(0, 0)))
                     {
@@ -1337,7 +1486,8 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
                         continue;
                     }
 
-                    Eigen::Matrix<double, 3, 6> jacobian = get_point_to_point_jacobian_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 6> jacobian =
+                        get_point_to_point_jacobian_tait_bryan(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     int ir = num_obs;
                     int ic = i * 6;
@@ -1393,7 +1543,7 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
@@ -1401,9 +1551,9 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
 }
 
 std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covariance_matrices_rodrigues_point_to_point_source_to_target(
-    PointClouds &point_clouds_container, PoseConvention pose_convention)
+    PointClouds& point_clouds_container, PoseConvention pose_convention)
 {
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.build_rgd();
         pc.cout_rgd();
@@ -1421,14 +1571,17 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
         {
             if (i != j)
             {
-                std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                std::vector<std::pair<int, int>> nns =
+                    point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
 
                 for (size_t k = 0; k < nns.size(); k++)
                 {
                     Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                    Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                    Eigen::Vector3d p_t(
+                        point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
-                    Eigen::Matrix<double, 3, 1> delta = get_delta_point_to_point_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 1> delta =
+                        get_delta_point_to_point_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     if (!(delta(0, 0) == delta(0, 0)))
                     {
@@ -1443,7 +1596,8 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
                         continue;
                     }
 
-                    Eigen::Matrix<double, 3, 6> jacobian = get_point_to_point_jacobian_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 6> jacobian =
+                        get_point_to_point_jacobian_rodrigues(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     int ir = num_obs;
                     int ic = i * 6;
@@ -1499,7 +1653,7 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
@@ -1507,9 +1661,9 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
 }
 
 std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> ICP::compute_covariance_matrices_quaternion_point_to_point_source_to_target(
-    PointClouds &point_clouds_container, PoseConvention pose_convention)
+    PointClouds& point_clouds_container, PoseConvention pose_convention)
 {
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.build_rgd();
         pc.cout_rgd();
@@ -1528,14 +1682,17 @@ std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> ICP::compute_covarianc
         {
             if (i != j)
             {
-                std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                std::vector<std::pair<int, int>> nns =
+                    point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
 
                 for (size_t k = 0; k < nns.size(); k++)
                 {
                     Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                    Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                    Eigen::Vector3d p_t(
+                        point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
-                    Eigen::Matrix<double, 3, 1> delta = get_delta_point_to_point_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 1> delta =
+                        get_delta_point_to_point_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     if (!(delta(0, 0) == delta(0, 0)))
                     {
@@ -1550,7 +1707,8 @@ std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> ICP::compute_covarianc
                         continue;
                     }
 
-                    Eigen::Matrix<double, 3, 7> jacobian = get_point_to_point_jacobian_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
+                    Eigen::Matrix<double, 3, 7> jacobian =
+                        get_point_to_point_jacobian_quaternion(pose_convention, point_clouds_container.point_clouds[i].m_pose, p_s, p_t);
 
                     int ir = num_obs;
                     int ic = i * 7;
@@ -1606,7 +1764,7 @@ std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> ICP::compute_covarianc
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
@@ -1614,25 +1772,18 @@ std::vector<Eigen::Matrix<double, 7, 7, Eigen::RowMajor>> ICP::compute_covarianc
     return covariance_matrices;
 }
 
-bool ICP::optimize_source_to_target_lie_algebra_left_jacobian(PointClouds &point_clouds_container)
+bool ICP::optimize_source_to_target_lie_algebra_left_jacobian(PointClouds& point_clouds_container)
 {
-    // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> covariance_matrices_before6x6;
-    // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> covariance_matrices_after6x6;
-
-    // covariance_matrices_before6x6 = compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_left_jacobian(point_clouds_container);
-
+    // TODO(mwlasiuk) : return ???
     optimize_source_to_target_lie_algebra_left_jacobian(point_clouds_container, is_fix_first_node);
-
-    // covariance_matrices_after6x6 = compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_left_jacobian(point_clouds_container);
-
-    // double mui = get_mean_uncertainty_xyz_impact6x6(covariance_matrices_before6x6, covariance_matrices_after6x6);
-    // std::cout << "mean uncertainty_xyz impact: " << mui << std::endl;
     return true;
 }
 
-std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_left_jacobian(PointClouds &point_clouds_container)
+std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::
+    compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_left_jacobian(
+        PointClouds& point_clouds_container)
 {
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.build_rgd();
         pc.cout_rgd();
@@ -1650,13 +1801,15 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
         {
             if (i != j)
             {
-                std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                std::vector<std::pair<int, int>> nns =
+                    point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
                 TaitBryanPose pose_s = pose_tait_bryan_from_affine_matrix(point_clouds_container.point_clouds[i].m_pose);
 
                 for (size_t k = 0; k < nns.size(); k++)
                 {
                     Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                    Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                    Eigen::Vector3d p_t(
+                        point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
                     Eigen::Matrix3d R = point_clouds_container.point_clouds[i].m_pose.rotation();
                     Eigen::Vector3d Rp = R * p_s;
@@ -1742,32 +1895,25 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
     return covariance_matrices;
 }
 
-bool ICP::optimize_source_to_target_lie_algebra_right_jacobian(PointClouds &point_clouds_container)
+bool ICP::optimize_source_to_target_lie_algebra_right_jacobian(PointClouds& point_clouds_container)
 {
-    // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> covariance_matrices_before6x6;
-    // std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> covariance_matrices_after6x6;
-
-    // covariance_matrices_before6x6 = compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_right_jacobian(point_clouds_container);
-
+    // TODO(mwlasiuk) : return ???
     optimize_source_to_target_lie_algebra_right_jacobian(point_clouds_container, is_fix_first_node);
-
-    // covariance_matrices_after6x6 = compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_right_jacobian(point_clouds_container);
-
-    // double mui = get_mean_uncertainty_xyz_impact6x6(covariance_matrices_before6x6, covariance_matrices_after6x6);
-    // std::cout << "mean uncertainty_xyz impact: " << mui << std::endl;
     return true;
 }
 
-std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_right_jacobian(PointClouds &point_clouds_container)
+std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::
+    compute_covariance_matrices_point_to_point_source_to_target_source_to_target_lie_algebra_right_jacobian(
+        PointClouds& point_clouds_container)
 {
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.build_rgd();
         pc.cout_rgd();
@@ -1785,13 +1931,15 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
         {
             if (i != j)
             {
-                std::vector<std::pair<int, int>> nns = point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radious);
+                std::vector<std::pair<int, int>> nns =
+                    point_clouds_container.point_clouds[i].nns(point_clouds_container.point_clouds[j], search_radius);
                 TaitBryanPose pose_s = pose_tait_bryan_from_affine_matrix(point_clouds_container.point_clouds[i].m_pose);
 
                 for (size_t k = 0; k < nns.size(); k++)
                 {
                     Eigen::Vector3d p_s(point_clouds_container.point_clouds[i].points_local[nns[k].first]);
-                    Eigen::Vector3d p_t(point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
+                    Eigen::Vector3d p_t(
+                        point_clouds_container.point_clouds[j].m_pose * point_clouds_container.point_clouds[j].points_local[nns[k].second]);
 
                     Eigen::Matrix3d px;
                     px(0, 0) = 0;
@@ -1877,7 +2025,7 @@ std::vector<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> ICP::compute_covarianc
     }
 
     // clean
-    for (auto &pc : point_clouds_container.point_clouds)
+    for (auto& pc : point_clouds_container.point_clouds)
     {
         pc.clean();
     }
